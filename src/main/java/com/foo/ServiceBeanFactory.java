@@ -3,6 +3,8 @@ package com.foo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,10 +18,12 @@ import java.util.stream.Collectors;
  */
 public enum ServiceBeanFactory {
 
+
     /**
      *
      */
     INSTANCE;
+
 
     public static ServiceBeanFactory getInstance() {
         return INSTANCE;
@@ -81,22 +85,31 @@ public enum ServiceBeanFactory {
     };
 
     /**
-     * TODO 这个地方是我的坑, 没给大家留出注册自己 service 的方法, 稍后改进.
+     * A simple service locator pattern
+     *
      * @param interfaceClass
      * @param <T>
      * @return
      */
     public <T> T getServiceBean(Class<T> interfaceClass) {
         if (interfaceClass == SkuService.class) {
-            return (T)this.skuService;
+            return (T) this.skuService;
         } else if (interfaceClass == PriceService.class) {
-            return (T)this.priceService;
+            return (T) this.priceService;
         } else if (interfaceClass == InventoryService.class) {
-            return (T)this.inventoryService;
+            return (T) this.inventoryService;
+        } else if (serviceMap.containsKey(interfaceClass)) {
+            return (T) serviceMap.get(interfaceClass);
         } else {
             throw new RuntimeException("不支持的接口类型");
         }
+    }
 
+
+    private Map<Class<?>, Object> serviceMap = new HashMap<>();
+
+    public <T> void registerServiceBean(Class<T> interfaceClass, T instance) {
+        serviceMap.put(interfaceClass, instance);
     }
 
     /**
@@ -132,8 +145,13 @@ public enum ServiceBeanFactory {
 
             skuEntityMap.put(id, skuEntity);
         }
+        EnumLogger.logger.debug(skuEntityMap.toString());
     }
 
+}
+
+class EnumLogger {
+    public static final Logger logger = LoggerFactory.getLogger(EnumLogger.class);
 }
 
 @Data
