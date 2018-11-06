@@ -6,7 +6,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.jvm.hotspot.utilities.AssertionFailure;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ public class ExamTest {
         ServiceBeanFactory factory = ServiceBeanFactory.getInstance();
         factory.registerServiceBean(ItemService.class,
                 new ItemServiceImpl(
+                        factory.getServiceBean(SkuService.class),
                         factory.getServiceBean(PriceService.class),
                         factory.getServiceBean(InventoryService.class)
                 ));
@@ -68,22 +68,11 @@ public class ExamTest {
     @Test
     public void singleOriginalSKUCase() {
 
-        SKUSpec sku = new SKUSpec();
-        sku.setType(SKUType.ORIGINAL);
-        sku.setArtNo("art1");
-        sku.setPrice(new BigDecimal("10.01"));
-        sku.getInventory().add(new InventorySpec("ch1", new BigDecimal("1.01")));
-        sku.getInventory().add(new InventorySpec("ch2", new BigDecimal("2.02")));
-
-        ItemServiceScene scene = new ItemServiceSceneFactory().createFromSKUSpec(sku);
-
-
-
         logger.trace("mock sku service");
         SkuService skuService = mock(SkuService.class);
         SkuInfoDTO theSKU = genSKU(theSKU1 -> {
-            theSKU1.setSkuType(sku.getType().name());
-            theSKU1.setArtNo(sku.getArtNo());
+            theSKU1.setSkuType("");
+            theSKU1.setArtNo("");
         });
         final List<String> ids = Collections.singletonList("1");
         when(skuService.findByIds(new ArrayList<>(ids)))
@@ -101,7 +90,7 @@ public class ExamTest {
         )));
 
         logger.trace("create SUT");
-        itemService = new ItemServiceImpl(priceService, inventoryService);
+        itemService = new ItemServiceImpl(skuService, priceService, inventoryService);
 
 
         logger.trace("do a biz");
